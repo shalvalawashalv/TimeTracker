@@ -114,6 +114,41 @@ PostgreSQL должен быть запущен, база и роль созда
 
 `GET /health` проверяет работу приложения, но не подключение к БД.
 
+## Запуск через Docker Compose
+
+Запустите Docker Desktop. Все команды выполняйте из корня проекта.
+
+Создайте файл `.env.compose`:
+
+```env
+POSTGRES_USER=tracker
+POSTGRES_PASSWORD=change_me
+POSTGRES_DB=tracker_db
+DATABASE_URL=postgresql+psycopg://tracker:change_me@db:5432/tracker_db
+DB_ECHO=false
+```
+
+Замените `change_me` на свой пароль в обеих строках. `db` в `DATABASE_URL` — имя сервиса PostgreSQL в `compose.yaml`. Не добавляйте `.env.compose` с настоящим паролем в Git.
+
+При первом запуске поднимите БД, примените миграции и запустите API:
+
+```cmd
+docker compose build api
+docker compose up -d db
+docker compose run --rm api python -m alembic upgrade head
+docker compose up -d api
+```
+
+Откройте http://localhost:8080/docs и выполните `GET /activities/` для проверки подключения к БД.
+
+При следующем запуске, если миграции не менялись, достаточно:
+
+```cmd
+docker compose up -d
+```
+
+Остановить проект можно командой `docker compose down`. Данные PostgreSQL останутся в томе. `docker compose down -v` удаляет том вместе с данными.
+
 ## Миграции
 
 Для управления структурой БД используется Alembic.
